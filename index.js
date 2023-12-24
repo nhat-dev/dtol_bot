@@ -88,10 +88,10 @@ const wallets = {
 
 bot.use(session());
 
-bot.command("drc20", async (ctx) => {
+bot.command("price", async (ctx) => {
   let token = _.trim(_.get(_.split(ctx.message.text, " "), "1"));
   if (!token) {
-    return ctx.reply("Token invalid! Type example /drc20 dugi");
+    return ctx.reply("Token invalid! Type example /price dugi");
   }
   const isPremium = await isUserTelegramPremium(ctx);
   if (!isPremium) {
@@ -137,7 +137,7 @@ bot.command("drc20", async (ctx) => {
 `;
     ctx.replyWithHTML(html, keyboard);
   } catch (error) {
-    return ctx.reply("Token invalid! Type example /drc20 dugi");
+    return ctx.reply("Token invalid! Type example /price dugi");
   }
 });
 
