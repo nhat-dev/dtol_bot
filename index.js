@@ -81,27 +81,31 @@ bot.start(async (ctx) => {
 // bot.help((ctx) => ctx.reply("Send me a sticker"));
 bot.on(message("sticker"), (ctx) => ctx.reply("👍"));
 bot.hears("hi", (ctx) => ctx.reply("Hey there"));
-
-const wallets = {
-  // AkaiTrading: "DMWLKaJnrDj7JxoeaUxc2foQAkw4AZfbkC",
-};
+const INVALID_USER_WHITE_LIST =
+  "The user is not whitelisted, please contact the administrator.";
+const INVALID_GROUP_CHAT = "This command is invalid in a group chat!";
+const SET_WALLET_CMD =
+  "Please set your wallet using the command /setwallet <<mywallet>>.";
+const wallets = {};
 
 bot.use(session());
 
 bot.command("price", async (ctx) => {
   let token = _.trim(_.get(_.split(ctx.message.text, " "), "1"));
   if (!token) {
-    return ctx.reply("Token invalid! Type example /price dugi");
+    return ctx.reply("Invalid token! Please type the example: /price dugi.");
   }
   const isPremium = await isUserTelegramPremium(ctx);
   if (!isPremium) {
-    return ctx.reply("User is not whitelist, please contact admin");
+    return ctx.reply(
+      "The user is not whitelisted; please contact the administrator."
+    );
   }
 
   try {
     const item = await getInfoCoin(_.toLower(token));
     if (!item.tick) {
-      throw Error("Not found token");
+      throw Error("Token not found.");
     }
     const keyboard = Markup.inlineKeyboard(
       [
@@ -137,29 +141,31 @@ bot.command("price", async (ctx) => {
 `;
     ctx.replyWithHTML(html, keyboard);
   } catch (error) {
-    return ctx.reply("Token invalid! Type example /price dugi");
+    return ctx.reply("Invalid token! Please type the example: /price dugi.");
   }
 });
 
 bot.command("setwallet", async (ctx) => {
   const isGroup = isMessageFromGroup(ctx);
   if (isGroup) {
-    return ctx.reply("Command invalid in group chat!");
+    return ctx.reply(INVALID_GROUP_CHAT);
   }
   const isPremium = await isUserTelegramPremium(ctx);
   if (!isPremium) {
-    return ctx.reply("User is not whitelist, please contact admin");
+    return ctx.reply(
+      "The user is not whitelisted; please contact the administrator."
+    );
   }
 
   console.log("setwallet", ctx.message);
   const user = _.get(ctx.message, "chat.username", "");
   let wallet = ctx.payload;
   if (!wallet) {
-    return ctx.reply("Wallet invalid!");
+    return ctx.reply("Invalid wallet!");
   }
   await insertUser({ name: user, wallet });
   // _.assign(wallets, { [user]: wallet });
-  return ctx.reply(`Set Wallet for user ${user} successfully!`);
+  return ctx.reply(`Wallet set successfully for user ${user}!`);
 });
 
 const getCurrentWallet = async (ctx) => {
@@ -206,12 +212,12 @@ const isUserTelegramPremium = async (ctx) => {
 bot.command("menu", async (ctx) => {
   const isGroup = isMessageFromGroup(ctx);
   if (isGroup) {
-    return ctx.reply("Command invalid in group chat!");
+    return ctx.reply(INVALID_GROUP_CHAT);
   }
 
   const isPremium = await isUserTelegramPremium(ctx);
   if (!isPremium) {
-    return ctx.reply("User is not whitelist, please contact admin");
+    return ctx.reply(INVALID_USER_WHITE_LIST);
   }
 
   console.log("ctx", ctx.message);
@@ -248,17 +254,19 @@ Main: ${wallet}
 bot.action("track_wallet", async (ctx) => {
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackWallet";
-  ctx.reply("Enter the wallet address you want to check ?");
+  ctx.reply("Please enter the wallet address you'd like to check.");
 });
 
 bot.action("inscriptions", (ctx) => {
-  ctx.reply("Ops! Coming soon...");
+  ctx.reply("Oops! This feature is coming soon...");
 });
 
 bot.action("track_token", async (ctx) => {
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackToken";
-  ctx.reply("Enter the token's name you want to check ? Ex: dogi");
+  ctx.reply(
+    "Please enter the name of the token you want to check. Example: dogi"
+  );
 });
 
 const errorSession = (ctx, errorMessage) => {
@@ -276,7 +284,7 @@ bot.on("text", async (ctx) => {
   if (state === "waitingForTrackWallet") {
     const wallet = await getCurrentWalletInCtx(ctx);
     if (!wallet) {
-      return errorSession(ctx, "Wallet invalid, please try again");
+      return errorSession(ctx, "Invalid wallet, please give it another try.");
     }
     const html = await getPorfolio(wallet);
     const keyboard = Markup.inlineKeyboard(
@@ -294,13 +302,13 @@ bot.on("text", async (ctx) => {
   } else if (state === "waitingForTrackToken") {
     const token = getCurrentTokenInCtx(ctx);
     if (!token) {
-      return errorSession(ctx, "Token invalid, please try again");
+      return errorSession(ctx, "Invalid token, please give it another try.");
     }
 
     try {
       const item = await getInfoCoin(_.toLower(token));
       if (!item.tick) {
-        throw Error("Not found token");
+        throw Error("Token not found.");
       }
       const keyboard = Markup.inlineKeyboard(
         [
@@ -337,14 +345,14 @@ bot.on("text", async (ctx) => {
       ctx.replyWithHTML(html, keyboard);
       delete ctx.session.state;
     } catch (error) {
-      return errorSession(ctx, "Token invalid, please try again");
+      return errorSession(ctx, "Invalid token, please give it another try.");
     }
   }
 });
 
 bot.action("cancel_session", (ctx) => {
   delete ctx.session.state;
-  ctx.reply("Hi, what do you do ?");
+  ctx.reply("Please check /menu to see more");
 });
 
 const getPorfolio = async (wallet) => {
@@ -365,13 +373,10 @@ const getPorfolio = async (wallet) => {
 bot.action("porfolio_tracked", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply("User is not whitelist, please contact admin");
+    return ctx.reply(INVALID_USER_WHITE_LIST);
   }
   const wallet = await getCurrentCommandWallet(ctx);
-  if (!wallet)
-    return ctx.reply(
-      "Please set your wallet with command /setwallet <mywallet>"
-    );
+  if (!wallet) return ctx.reply(SET_WALLET_CMD);
 
   const html = await getPorfolio(wallet);
   ctx.replyWithHTML(html);
@@ -380,14 +385,11 @@ bot.action("porfolio_tracked", async (ctx) => {
 bot.action("your_balance", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply("User is not whitelist, please contact admin");
+    return ctx.reply(INVALID_USER_WHITE_LIST);
   }
   const wallet = await getCurrentCommandWallet(ctx);
 
-  if (!wallet)
-    return ctx.reply(
-      "Please set your wallet with command /setwallet <mywallet>"
-    );
+  if (!wallet) return ctx.reply(SET_WALLET_CMD);
 
   const data = await getBalance(wallet);
   console.log("Data", JSON.stringify(data));
@@ -412,15 +414,12 @@ const replyNFT = async (wallet, ctx) => {
 bot.action(/.+/, async (ctx, next) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply("User is not whitelist, please contact admin");
+    return ctx.reply(INVALID_USER_WHITE_LIST);
   }
   const cm = ctx.match[0];
   if (cm.startsWith("your_nft")) {
     const wallet = _.last(cm.split(":"));
-    if (!wallet)
-      return ctx.reply(
-        "Please set your wallet with command /setwallet <mywallet>"
-      );
+    if (!wallet) return ctx.reply(SET_WALLET_CMD);
 
     await replyNFT(wallet, ctx);
   } else if (cm.startsWith("dogemap")) {
@@ -459,16 +458,13 @@ bot.action(/.+/, async (ctx, next) => {
 bot.action("your_nft", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply("User is not whitelist, please contact admin");
+    return ctx.reply(INVALID_USER_WHITE_LIST);
   }
   console.log("aaaa", ctx);
   const paramValue = ctx.match[1];
   const wallet = paramValue || getCurrentCommandWallet(ctx);
 
-  if (!wallet)
-    return ctx.reply(
-      "Please set your wallet with command /setwallet <mywallet>"
-    );
+  if (!wallet) return ctx.reply(SET_WALLET_CMD);
 
   await replyNFT(wallet, ctx);
 });
@@ -476,14 +472,11 @@ bot.action("your_nft", async (ctx) => {
 bot.action("top_listed_dogemap", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply("User is not whitelist, please contact admin");
+    return ctx.reply(INVALID_USER_WHITE_LIST);
   }
   const wallet = getCurrentCommandWallet(ctx);
 
-  if (!wallet)
-    return ctx.reply(
-      "Please set your wallet with command /setwallet <mywallet>"
-    );
+  if (!wallet) return ctx.reply(SET_WALLET_CMD);
 
   const data = await getDogmap(wallet);
   const keyboard = Markup.inlineKeyboard(
@@ -507,14 +500,11 @@ bot.action("top_listed_dogemap", async (ctx) => {
 bot.action("top_trending", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply("User is not whitelist, please contact admin");
+    return ctx.reply(INVALID_USER_WHITE_LIST);
   }
   const wallet = getCurrentCommandWallet(ctx);
 
-  if (!wallet)
-    return ctx.reply(
-      "Please set your wallet with command /setwallet <mywallet>"
-    );
+  if (!wallet) return ctx.reply(SET_WALLET_CMD);
 
   const data = await getTrending(wallet);
   ctx.replyWithHTML(
