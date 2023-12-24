@@ -50,7 +50,8 @@ const getInfoCoin = async (tick) => {
   ]);
 
   return {
-    price: toNumber(data.marketcap) / toNumber(data.max) / 0.09603 / 1000000000,
+    price:
+      toNumber(data.marketcap || 0) / toNumber(data.max) / 0.09603 / 1000000000,
     mc: toNumber(data.marketcap || 0) / 1000000000,
     supply: toNumber(data.max),
     tick: data.tick,
