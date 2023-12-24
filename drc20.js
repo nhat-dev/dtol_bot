@@ -112,6 +112,21 @@ const getDogmap = async () => {
   };
 };
 
+const getDogmapListing = async () => {
+  const data = await makeCallAPI(
+    `https://api.doggy.market/listings/dogemaps?sortBy=price&sortOrder=asc&offset=0&limit=10`
+  );
+  const recentlyListed = get(data, "data", []);
+
+  return map(recentlyListed, (e) => {
+    return {
+      name: get(e, "data"),
+      seller: get(e, "sellerAddress"),
+      price: formatBalance(get(e, "price")),
+    };
+  });
+};
+
 const getMyDogmap = async (wallet) => {
   const res = await makeCallAPI(
     `https://api.doggy.market/wallet/${wallet}/dogemaps?offset=0&limit=40`
@@ -172,4 +187,5 @@ module.exports = {
   getTrending,
   getMyDogmap,
   getActivity,
+  getDogmapListing,
 };

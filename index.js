@@ -25,6 +25,7 @@ require("dotenv").config();
 const { message } = require("telegraf/filters");
 const utils = require("./utils");
 const markets = require("./market");
+const mongoose = require("mongoose");
 
 const { Telegraf, Markup, session } = require("telegraf");
 const {
@@ -38,79 +39,47 @@ const {
   getActivity,
 } = require("./drc20");
 const { formatBalance } = require("./formatter");
+const { insertUser, findCurrentUser, isUserPremium } = require("./model");
+
+function formatWalletAddress(
+  walletAddress,
+  prefixLength = 6,
+  suffixLength = 6
+) {
+  walletAddress = walletAddress.toString();
+  const prefix = walletAddress.substring(0, prefixLength);
+  const suffix = walletAddress.slice(-suffixLength);
+  const formattedAddress = `${prefix}...${suffix}`;
+
+  return formattedAddress;
+}
+
+mongoose
+  .connect(process.env.DATABASE_URL)
+  .then(async () => {
+    console.log("Connected");
+    require("./scheme");
+    // require("./seed");
+  })
+  .catch(() => {
+    console.log("Connected error");
+  });
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
-bot.start((ctx) => ctx.reply("Welcome"));
-bot.help((ctx) => ctx.reply("Send me a sticker"));
+bot.start((ctx) =>
+  ctx.replyWithHTML(
+    `<b>Fbod DRC-20 Bot</b>\n\nWelcome! Fbod is a revolutionary telegram bot on the DRC20 ecosystem. \nFbod makes trading inscriptions more seamless and convenient. `
+  )
+);
+// bot.help((ctx) => ctx.reply("Send me a sticker"));
 bot.on(message("sticker"), (ctx) => ctx.reply("👍"));
 bot.hears("hi", (ctx) => ctx.reply("Hey there"));
 
 const wallets = {
-  AkaiTrading: "DMWLKaJnrDj7JxoeaUxc2foQAkw4AZfbkC",
+  // AkaiTrading: "DMWLKaJnrDj7JxoeaUxc2foQAkw4AZfbkC",
 };
 
 bot.use(session());
-
-bot.command("account", async (ctx) => {
-  let address = _.trim(_.get(_.split(ctx.message.text, " "), "1"));
-  console.log("address", address);
-  if (!address) {
-    // address = "DJV72uHdFx6UcJzF5G44iLtD54gbch6WqA";
-    return ctx.reply(
-      "Address wallet invalid! \n\nExample /account Dxxxx..............."
-    );
-  }
-
-  // const address = "DJV72uHdFx6UcJzF5G44iLtD54gbch6WqA";
-
-  const coins = await getListCoin(address);
-  const html = `
-
-    ${_.map(coins, (item) => {
-      return `- <b>Tick: ${item.tick}</b> - Amount: ${markets.formatVND(
-        _.toNumber(item.available + item.inscribed) * _.toNumber(item.price)
-      )} DOGE - Price: ${markets.formatUSD(_.toNumber(item.price))} DOGE  `;
-    }).join("\n")}\n<b>Summary</b>: ${markets.formatVND(
-    _.toArray(coins).reduce((sum, item) => {
-      return (
-        sum +
-        _.toNumber(item.available + item.inscribed) * _.toNumber(item.price)
-      );
-    }, 0)
-  )} DOGE\n
-
-`;
-  ctx.replyWithHTML(html);
-});
-
-bot.command("hodl", async (ctx) => {
-  let address = _.trim(_.get(_.split(ctx.message.text, " "), "1"));
-  console.log("address", address);
-  if (!address) {
-    address = "DJV72uHdFx6UcJzF5G44iLtD54gbch6WqA";
-  }
-
-  // const address = "DJV72uHdFx6UcJzF5G44iLtD54gbch6WqA";
-
-  const coins = await getListCoin(address);
-  const html = `
-
-    ${_.map(coins, (item) => {
-      return `- <b>Tick: ${item.tick}</b> - Amount: ${markets.formatVND(
-        _.toNumber(item.available + item.inscribed) * _.toNumber(item.price)
-      )} DOGE - Price: ${markets.formatUSD(_.toNumber(item.price))} DOGE  `;
-    }).join("\n")}\n<b>Summary</b>: ${markets.formatVND(
-    _.toArray(coins).reduce((sum, item) => {
-      return (
-        sum +
-        _.toNumber(item.available + item.inscribed) * _.toNumber(item.price)
-      );
-    }, 0)
-  )} DOGE\n
-
-`;
-  ctx.replyWithHTML(html);
-});
 
 bot.command("drc20", async (ctx) => {
   let token = _.trim(_.get(_.split(ctx.message.text, " "), "1"));
@@ -119,35 +88,49 @@ bot.command("drc20", async (ctx) => {
   }
 
   try {
-    const item = await getInfoCoin(token);
-    const html = `<b>DRC-20 coin tracking</b>\n\n💰 <b>Token: ${
+    const item = await getInfoCoin(_.toLower(token));
+    if (!item.tick) {
+      throw Error("Not found token");
+    }
+    const keyboard = Markup.inlineKeyboard(
+      [
+        Markup.button.url(
+          `Buy/Sell ${item.tick}`,
+          `https://doggy.market/${item.tick}`
+        ),
+      ],
+      {
+        columns: 2,
+      }
+    );
+    const html = `<b>DRC-20 coin tracking</b>\n💰 <b>Token: ${
       item.tick
-    }</b>\n🔹 Price       ${markets.formatUSD(
+    }</b>\n\n🔹 Price       ${markets.formatUSD(
       _.toNumber(item.price)
     )} DOGE\n🔹 24 Change     ${markets.formatUSD2(
       _.toNumber(item.change24h) * 100
     )}% \n🔹 Minted     ${markets.formatUSD2(
       _.toNumber(item.minted) * 100
-    )}% \n🔹 Deployer     ${
+    )}% \n🔹 Deployer     ${formatWalletAddress(
       item.deployer
-    }% \n🔹 Holders     ${markets.formatVND(
+    )} \n🔹 Holders     ${markets.formatVND(
       item.holders
     )}% \n🔹 Mkt Cap     ${markets.formatVND(
       _.toNumber(item.mc)
     )} $\n🔹 Supply      ${markets.formatVND(
       _.toNumber(item.supply)
     )}\n\n<b>🏆 Top holders</b>\n${_.map(item.topholder, (t) => {
-      return `- ${t.address}`;
-    }).join("\n")}\n\nCode by @AkaiTrading
+      return `- ${formatWalletAddress(t.address)}`;
+    }).join("\n")}\n\n
 
 `;
-    ctx.replyWithHTML(html);
+    ctx.replyWithHTML(html, keyboard);
   } catch (error) {
-    return ctx.reply("Token invalid! Type example /token dugi");
+    return ctx.reply("Token invalid! Type example /drc20 dugi");
   }
 });
 
-bot.command("setwallet", (ctx) => {
+bot.command("setwallet", async (ctx) => {
   const isGroup = isMessageFromGroup(ctx);
   if (isGroup) {
     return ctx.reply("Command invalid in group chat!");
@@ -158,18 +141,20 @@ bot.command("setwallet", (ctx) => {
   if (!wallet) {
     return ctx.reply("Wallet invalid!");
   }
-  _.assign(wallets, { [user]: wallet });
+  await insertUser({ name: user, wallet });
+  // _.assign(wallets, { [user]: wallet });
   return ctx.reply(`Set Wallet for user ${user} successfully!`);
 });
 
-const getCurrentWallet = (ctx) => {
+const getCurrentWallet = async (ctx) => {
   const user = _.get(ctx.message, "chat.username", "");
-  return _.get(wallets, user, "");
+  const data = await findCurrentUser(user);
+  return _.get(data, "wallet", "");
 };
 
 const getCurrentWalletInCtx = (ctx) => {
   const wallet = `${ctx.message.text}`;
-  if (!wallet.startsWith("D")) return null;
+  if (!wallet.startsWith("D") || wallet.length < 34) return null;
   return wallet;
 };
 
@@ -178,10 +163,11 @@ const getCurrentTokenInCtx = (ctx) => {
   return wallet;
 };
 
-const getCurrentCommandWallet = (ctx) => {
+const getCurrentCommandWallet = async (ctx) => {
   console.log("aaa", ctx.update);
   const user = _.get(ctx.update, "callback_query.from.username", "");
-  return _.get(wallets, user, "");
+  const data = await findCurrentUser(user);
+  return _.get(data, "wallet", "");
 };
 
 const isMessageFromGroup = (ctx) => {
@@ -189,13 +175,31 @@ const isMessageFromGroup = (ctx) => {
   return chat === "supergroup";
 };
 
-bot.command("menu", (ctx) => {
+const isUserTelegramPremiumCtx = async (ctx) => {
+  const user = _.get(ctx.update, "callback_query.from.username", "");
+  const isPremium = await isUserPremium(user);
+  return isPremium;
+};
+
+const isUserTelegramPremium = async (ctx) => {
+  const user = _.get(ctx.message, "chat.username", "");
+  const isPremium = await isUserPremium(user);
+  return isPremium;
+};
+
+bot.command("menu", async (ctx) => {
   const isGroup = isMessageFromGroup(ctx);
   if (isGroup) {
     return ctx.reply("Command invalid in group chat!");
   }
+
+  const isPremium = await isUserTelegramPremium(ctx);
+  if (!isPremium) {
+    return ctx.reply("User is not whitelist, please contact admin");
+  }
+
   console.log("ctx", ctx.message);
-  const wallet = getCurrentWallet(ctx);
+  const wallet = await getCurrentWallet(ctx);
   const messageText = `
   <b>DRC-20 coin tracking</b>\n
 ========= Your wallet =========
@@ -208,10 +212,13 @@ Main: ${wallet}
       Markup.button.callback("🪙 Porfolio Tracker", "porfolio_tracked"),
       Markup.button.callback("⚖ Your Balance", "your_balance"),
       Markup.button.callback("🖼 Your NFT", `your_nft:${wallet}`),
-      Markup.button.callback("🐶 Dogemap", `dogemap:${wallet}`),
+      Markup.button.callback("🐶 Dogemap", "top_listed_dogemap"),
       Markup.button.callback("📈 Top trending", "top_trending"),
       Markup.button.callback("✅ Check wallet", "track_wallet"),
       Markup.button.callback("🔑 Check token", "track_token"),
+      Markup.button.callback("📝 Inscribe Transfer", "inscriptions"),
+      Markup.button.callback("🐳 Buy Inscriptions", "inscriptions"),
+      Markup.button.callback("🐻 Sell Inscriptions", "inscriptions"),
     ],
     {
       columns: 2,
@@ -228,10 +235,14 @@ bot.action("track_wallet", async (ctx) => {
   ctx.reply("Enter the wallet address you want to check ?");
 });
 
+bot.action("inscriptions", (ctx) => {
+  ctx.reply("Ops! Comming soon...");
+});
+
 bot.action("track_token", async (ctx) => {
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackToken";
-  ctx.reply("Enter the token address you want to check ?");
+  ctx.reply("Enter the token's name you want to check ? Ex: dogi");
 });
 
 const errorSession = (ctx, errorMessage) => {
@@ -245,9 +256,9 @@ const errorSession = (ctx, errorMessage) => {
 };
 
 bot.on("text", async (ctx) => {
-  const { state } = ctx.session;
+  const state = _.get(ctx.session, "state", "");
   if (state === "waitingForTrackWallet") {
-    const wallet = getCurrentWalletInCtx(ctx);
+    const wallet = await getCurrentWalletInCtx(ctx);
     if (!wallet) {
       return errorSession(ctx, "Wallet invalid, please try again");
     }
@@ -271,10 +282,21 @@ bot.on("text", async (ctx) => {
     }
 
     try {
-      const item = await getInfoCoin(token);
+      const item = await getInfoCoin(_.toLower(token));
       if (!item.tick) {
         throw Error("Not found token");
       }
+      const keyboard = Markup.inlineKeyboard(
+        [
+          Markup.button.url(
+            `Buy/Sell ${item.tick}`,
+            `https://doggy.market/${item.tick}`
+          ),
+        ],
+        {
+          columns: 2,
+        }
+      );
       const html = `<b>DRC-20 coin tracking</b>\n💰 <b>Token: ${
         item.tick
       }</b>\n\n🔹 Price       ${markets.formatUSD(
@@ -283,20 +305,20 @@ bot.on("text", async (ctx) => {
         _.toNumber(item.change24h) * 100
       )}% \n🔹 Minted     ${markets.formatUSD2(
         _.toNumber(item.minted) * 100
-      )}% \n🔹 Deployer     ${
+      )}% \n🔹 Deployer     ${formatWalletAddress(
         item.deployer
-      } \n🔹 Holders     ${markets.formatVND(
+      )} \n🔹 Holders     ${markets.formatVND(
         item.holders
       )}% \n🔹 Mkt Cap     ${markets.formatVND(
         _.toNumber(item.mc)
       )} $\n🔹 Supply      ${markets.formatVND(
         _.toNumber(item.supply)
       )}\n\n<b>🏆 Top holders</b>\n${_.map(item.topholder, (t) => {
-        return `- ${t.address}`;
+        return `- ${formatWalletAddress(t.address)}`;
       }).join("\n")}\n\n
   
   `;
-      ctx.replyWithHTML(html);
+      ctx.replyWithHTML(html, keyboard);
       delete ctx.session.state;
     } catch (error) {
       return errorSession(ctx, "Token invalid, please try again");
@@ -325,6 +347,10 @@ const getPorfolio = async (wallet) => {
 
 // Handling button click
 bot.action("porfolio_tracked", async (ctx) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  if (!isPremium) {
+    return ctx.reply("User is not whitelist, please contact admin");
+  }
   const wallet = getCurrentCommandWallet(ctx);
   if (!wallet)
     return ctx.reply(
@@ -336,7 +362,11 @@ bot.action("porfolio_tracked", async (ctx) => {
 });
 
 bot.action("your_balance", async (ctx) => {
-  const wallet = getCurrentCommandWallet(ctx);
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  if (!isPremium) {
+    return ctx.reply("User is not whitelist, please contact admin");
+  }
+  const wallet = await getCurrentCommandWallet(ctx);
 
   if (!wallet)
     return ctx.reply(
@@ -363,7 +393,11 @@ const replyNFT = async (wallet, ctx) => {
   );
 };
 
-bot.action(/.+/, async (ctx) => {
+bot.action(/.+/, async (ctx, next) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  if (!isPremium) {
+    return ctx.reply("User is not whitelist, please contact admin");
+  }
   const cm = ctx.match[0];
   if (cm.startsWith("your_nft")) {
     const wallet = _.last(cm.split(":"));
@@ -403,9 +437,14 @@ bot.action(/.+/, async (ctx) => {
       }`
     );
   }
+  next();
 });
 
 bot.action("your_nft", async (ctx) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  if (!isPremium) {
+    return ctx.reply("User is not whitelist, please contact admin");
+  }
   console.log("aaaa", ctx);
   const paramValue = ctx.match[1];
   const wallet = paramValue || getCurrentCommandWallet(ctx);
@@ -418,7 +457,11 @@ bot.action("your_nft", async (ctx) => {
   await replyNFT(wallet, ctx);
 });
 
-bot.action("dogemap", async (ctx) => {
+bot.action("top_listed_dogemap", async (ctx) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  if (!isPremium) {
+    return ctx.reply("User is not whitelist, please contact admin");
+  }
   const wallet = getCurrentCommandWallet(ctx);
 
   if (!wallet)
@@ -427,6 +470,12 @@ bot.action("dogemap", async (ctx) => {
     );
 
   const data = await getDogmap(wallet);
+  const keyboard = Markup.inlineKeyboard(
+    [Markup.button.url("Buy dogemap", "https://doggy.market/dogemaps")],
+    {
+      columns: 2,
+    }
+  );
   ctx.replyWithHTML(
     `<b>🐶 Dogemap:</b>\n📈 Floor: ${_.get(
       data,
@@ -434,11 +483,16 @@ bot.action("dogemap", async (ctx) => {
       ""
     )} DOGE \nRecently Listed:\n${_.map(data.recently, (e) => {
       return `- <b>${_.get(e, "name", "")}</b> = ${_.get(e, "price", "")} DOGE`;
-    }).join("\n")}`
+    }).join("\n")}`,
+    keyboard
   );
 });
 
 bot.action("top_trending", async (ctx) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  if (!isPremium) {
+    return ctx.reply("User is not whitelist, please contact admin");
+  }
   const wallet = getCurrentCommandWallet(ctx);
 
   if (!wallet)
