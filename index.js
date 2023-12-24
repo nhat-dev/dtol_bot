@@ -313,21 +313,21 @@ bot.on("text", async (ctx) => {
           columns: 2,
         }
       );
-      const html = `<b>DRC-20 coin tracking</b>\n💰 <b>Token: ${
+      const html = `<b>DRC-20 coin tracking</b>\n🐶 <b>${
         item.tick
-      }</b>\n\n🔹 Price       ${markets.formatUSD(
+      }</b> 🐶\n\n💵 <b>Price</b>: ${markets.formatUSD(
         _.toNumber(item.price)
-      )} DOGE\n🔹 24 Change     ${markets.formatUSD2(
+      )} DOGE\n⬆️ <b>24 Change</b>: ${markets.formatUSD2(
         _.toNumber(item.change24h) * 100
-      )}% \n🔹 Minted     ${markets.formatUSD2(
+      )}% \n👥 <b>Minted</b>: ${markets.formatUSD2(
         _.toNumber(item.minted) * 100
-      )}% \n🔹 Deployer     ${formatWalletAddress(
+      )}% \n👤 <b>Deployer</b>: ${formatWalletAddress(
         item.deployer
-      )} \n🔹 Holders     ${markets.formatVND(
+      )} \n👥 <b>Holders</b>: ${markets.formatVND(
         item.holders
-      )}% \n🔹 Mkt Cap     ${markets.formatVND(
+      )} \n💸 <b>Market Cap</b>: ${markets.formatVND(
         _.toNumber(item.mc)
-      )} $\n🔹 Supply      ${markets.formatVND(
+      )} $\n🔀 <b>Supply</b>: ${markets.formatVND(
         _.toNumber(item.supply)
       )}\n\n<b>🏆 Top holders</b>\n${_.map(item.topholder, (t) => {
         return `- ${formatWalletAddress(t.address)}`;
