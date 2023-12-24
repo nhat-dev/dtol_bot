@@ -86,6 +86,10 @@ bot.command("drc20", async (ctx) => {
   if (!token) {
     return ctx.reply("Token invalid! Type example /drc20 dugi");
   }
+  const isPremium = await isUserTelegramPremium(ctx);
+  if (!isPremium) {
+    return ctx.reply("User is not whitelist, please contact admin");
+  }
 
   try {
     const item = await getInfoCoin(_.toLower(token));
@@ -135,6 +139,11 @@ bot.command("setwallet", async (ctx) => {
   if (isGroup) {
     return ctx.reply("Command invalid in group chat!");
   }
+  const isPremium = await isUserTelegramPremium(ctx);
+  if (!isPremium) {
+    return ctx.reply("User is not whitelist, please contact admin");
+  }
+
   console.log("setwallet", ctx.message);
   const user = _.get(ctx.message, "chat.username", "");
   let wallet = ctx.payload;
