@@ -351,7 +351,7 @@ bot.action("porfolio_tracked", async (ctx) => {
   if (!isPremium) {
     return ctx.reply("User is not whitelist, please contact admin");
   }
-  const wallet = getCurrentCommandWallet(ctx);
+  const wallet = await getCurrentCommandWallet(ctx);
   if (!wallet)
     return ctx.reply(
       "Please set your wallet with command /setwallet <mywallet>"

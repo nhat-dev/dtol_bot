@@ -18,6 +18,7 @@ const getListCoin = async (wallet) => {
   const data = await makeCallAPI(
     `https://api.doggy.market/wallet/${wallet}/holdings`
   );
+  console.log("aaaa", data, wallet);
   const datas = await Promise.all(
     map(data, async (item) => {
       // const tick = await getPrice(item.tick);
