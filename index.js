@@ -39,7 +39,12 @@ const {
   getActivity,
 } = require("./drc20");
 const { formatBalance } = require("./formatter");
-const { insertUser, findCurrentUser, isUserPremium } = require("./model");
+const {
+  insertUser,
+  findCurrentUser,
+  isUserPremium,
+  insertStartUser,
+} = require("./model");
 
 function formatWalletAddress(
   walletAddress,
@@ -66,11 +71,13 @@ mongoose
   });
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
-bot.start((ctx) =>
-  ctx.replyWithHTML(
+bot.start(async (ctx) => {
+  const user = _.get(ctx.message, "chat.username", "");
+  await insertStartUser({ name: user });
+  return ctx.replyWithHTML(
     `<b>Fbod DRC-20 Bot</b>\n\nWelcome! Fbod is a revolutionary telegram bot on the DRC20 ecosystem. \nFbod makes trading inscriptions more seamless and convenient. `
-  )
-);
+  );
+});
 // bot.help((ctx) => ctx.reply("Send me a sticker"));
 bot.on(message("sticker"), (ctx) => ctx.reply("👍"));
 bot.hears("hi", (ctx) => ctx.reply("Hey there"));
