@@ -1,0 +1,26 @@
+{
+  "name": "tokenscrollcheck",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.5.1",
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.4",
+    "node-fetch": "2",
+    "puppeteer": "^21.6.1",
+    "telegraf": "^4.14.0",
+    "telegraf-command-parts": "^1.0.3"
+  },
+  "engines": {
+    "node": "16.20"
+  }
+}
