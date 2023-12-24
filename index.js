@@ -86,6 +86,7 @@ const INVALID_USER_WHITE_LIST =
 const INVALID_GROUP_CHAT = "This command is invalid in a group chat!";
 const SET_WALLET_CMD =
   "Please set your wallet using the command /setwallet <<mywallet>>.";
+const APP_TITLE = "Fbod DRC-20 coin tracking";
 const wallets = {};
 
 bot.use(session());
@@ -118,7 +119,7 @@ bot.command("price", async (ctx) => {
         columns: 2,
       }
     );
-    const html = `<b>Fbod DRC-20 coin tracking</b>\n🐶 <b>${
+    const html = `<b>${APP_TITLE}</b>\n🐶 <b>${
       item.tick
     }</b> 🐶\n\n💵 <b>Price</b>: ${markets.formatUSD(
       _.toNumber(item.price)
@@ -223,7 +224,7 @@ bot.command("menu", async (ctx) => {
   console.log("ctx", ctx.message);
   const wallet = await getCurrentWallet(ctx);
   const messageText = `
-  <b>DRC-20 coin tracking</b>\n
+  <b>${APP_TITLE}</b>\n
 ========= Your wallet =========
 Main: ${wallet}
   `;
@@ -321,7 +322,7 @@ bot.on("text", async (ctx) => {
           columns: 2,
         }
       );
-      const html = `<b>Fbod DRC-20 coin tracking</b>\n🐶 <b>${
+      const html = `<b>${APP_TITLE}</b>\n🐶 <b>${
         item.tick
       }</b> 🐶\n\n💵 <b>Price</b>: ${markets.formatUSD(
         _.toNumber(item.price)
@@ -359,7 +360,7 @@ const getPorfolio = async (wallet) => {
   const coins = await getListCoin(wallet);
   const html = `
       <b>🪙 Your porfolio:</b>\n${_.map(coins, (item) => {
-        return `- <b>Tick: ${item.tick}</b> - Amount: ${markets.formatVND(
+        return `- <b>Ticker: ${item.tick}</b> - Amount: ${markets.formatVND(
           _.toNumber(item.available + item.inscribed)
         )}`;
       }).join("\n")}
@@ -402,7 +403,7 @@ const replyNFT = async (wallet, ctx) => {
   const data = await getNFT(wallet);
   ctx.replyWithHTML(
     `<b>🖼 Your NFT List: ${wallet}</b>\n${_.map(data, (e) => {
-      return `- Name: ${_.get(e, "name", "")} Amount: ${_.get(
+      return `- Name: ${_.get(e, "name", "")} - Amount: ${_.get(
         e,
         "amount",
         ""
@@ -443,11 +444,11 @@ bot.action(/.+/, async (ctx, next) => {
         data.length === 0
           ? "Not found"
           : _.map(data, (e) => {
-              return `- <b>Tick: ${_.get(e, "tick", "")}</b> - Amount: ${_.get(
+              return `- <b>Ticker: ${_.get(
                 e,
-                "amount",
+                "tick",
                 ""
-              )}`;
+              )}</b> - Amount: ${_.get(e, "amount", "")}`;
             }).join("\n")
       }`
     );
@@ -509,9 +510,9 @@ bot.action("top_trending", async (ctx) => {
   const data = await getTrending(wallet);
   ctx.replyWithHTML(
     `<b>📈 Top trending:</b>\n${_.map(data, (e) => {
-      return `💠 <b>${e.tick}</b> - ${e.price} DOGE - 📈 24h: ${(
-        e.change24h * 100
-      ).toFixed(2)}%`;
+      return `💠 <b>Ticker: ${e.tick}</b> - ${e.price} DOGE - ${
+        e.change24h > 0 ? "📈" : "📉"
+      } 24h: ${(e.change24h * 100).toFixed(2)}%`;
     }).join("\n")}`
   );
 });
