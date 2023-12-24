@@ -252,7 +252,7 @@ bot.action("track_wallet", async (ctx) => {
 });
 
 bot.action("inscriptions", (ctx) => {
-  ctx.reply("Ops! Comming soon...");
+  ctx.reply("Ops! Coming soon...");
 });
 
 bot.action("track_token", async (ctx) => {

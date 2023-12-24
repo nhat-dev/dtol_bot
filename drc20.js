@@ -51,10 +51,10 @@ const getInfoCoin = async (tick) => {
 
   return {
     price: toNumber(data.marketcap) / toNumber(data.max) / 0.09603 / 1000000000,
-    mc: toNumber(data.marketcap) / 1000000000,
+    mc: toNumber(data.marketcap || 0) / 1000000000,
     supply: toNumber(data.max),
     tick: data.tick,
-    change24h: data.change24h,
+    change24h: data.change24h || 0,
     minted: toNumber(data.mintedAmt) / toNumber(data.max),
     topholder: get(topholder, "data", []),
     holders: toNumber(data.holders),
