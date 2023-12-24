@@ -2,8 +2,13 @@ const { UserModel, PremiumModel } = require("./scheme");
 
 const insertUser = async ({ name, wallet }) => {
   try {
-    const user = new UserModel({ name, wallet });
-    await user.save();
+    const isExists = await UserModel.findOne({ name }).lean();
+    if (!isExists) {
+      const user = new UserModel({ name, wallet });
+      await user.save();
+    } else {
+      await UserModel.findByIdAndUpdate(isExists._id, { wallet });
+    }
   } catch (error) {
     console.log("error", error);
   }
