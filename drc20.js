@@ -79,7 +79,7 @@ const getNFT = async (wallet) => {
   const res = filter(
     map(get(data, "data", []), (e) => {
       return {
-        name: get(e, "nft.itemName"),
+        name: get(e, "nft.itemName") || `#${get(e, "inscriptionNumber")}`,
       };
     }),
     (x) => !!x.name

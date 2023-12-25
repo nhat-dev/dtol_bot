@@ -539,6 +539,17 @@ bot.action("your_balance", async (ctx) => {
 
 const replyNFT = async (wallet, ctx) => {
   const data = await getNFT(wallet);
+  const keyboard1 = Markup.inlineKeyboard(
+    [
+      Markup.button.url(
+        `See more NFTs`,
+        `https://doggy.market/wallet/${wallet}/nfts`
+      ),
+    ],
+    {
+      columns: 2,
+    }
+  );
   ctx.replyWithHTML(
     `<b>🖼 Your NFT List: ${wallet}</b>\n${_.map(data, (e) => {
       return `- Name: ${_.get(e, "name", "")} - Amount: ${_.get(
@@ -546,7 +557,8 @@ const replyNFT = async (wallet, ctx) => {
         "amount",
         ""
       )}`;
-    }).join("\n")}`
+    }).join("\n")}`,
+    keyboard1
   );
 };
 
