@@ -70,12 +70,14 @@ mongoose
     console.log("Connected error");
   });
 
+const APP_TITLE = "DRC-20 x Digital Bot";
+
 const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.start(async (ctx) => {
   const user = _.get(ctx.message, "chat.username", "");
   await insertStartUser({ name: user });
   return ctx.replyWithHTML(
-    `<b>Fbod DRC-20 Bot</b>\n\nWelcome! Fbod is a revolutionary telegram bot on the DRC20 ecosystem. \nFbod makes trading inscriptions more seamless and convenient. `
+    `<b>${APP_TITLE}</b>\n\nWelcome! ${APP_TITLE} is a revolutionary telegram bot on the DRC20 ecosystem. \n${APP_TITLE} makes trading inscriptions more seamless and convenient. `
   );
 });
 // bot.help((ctx) => ctx.reply("Send me a sticker"));
@@ -86,7 +88,6 @@ const INVALID_USER_WHITE_LIST =
 const INVALID_GROUP_CHAT = "This command is invalid in a group chat!";
 const SET_WALLET_CMD =
   "Please set your wallet using the command /setwallet <<mywallet>>.";
-const APP_TITLE = "DRC-20 x Digital Bot";
 const wallets = {};
 
 bot.use(session());
