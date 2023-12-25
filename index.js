@@ -282,26 +282,42 @@ Main: ${wallet}
 });
 
 bot.action("track_wallet", async (ctx) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  if (!isPremium) {
+    return accessBot(ctx);
+  }
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackWallet";
   ctx.reply("Please enter the wallet address you'd like to check.");
 });
 
-bot.action("inscriptions", (ctx) => {
+bot.action("inscriptions", async (ctx) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  if (!isPremium) {
+    return accessBot(ctx);
+  }
   // ctx.reply("Oops! This feature is coming soon...");
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackInscriptionWallet";
   ctx.reply("Please enter the name of the token you want to inscribe:");
 });
 
-bot.action("buy_inscriptions", (ctx) => {
+bot.action("buy_inscriptions", async (ctx) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  if (!isPremium) {
+    return accessBot(ctx);
+  }
   // ctx.reply("Oops! This feature is coming soon...");
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackBuyInscriptionWallet";
   ctx.reply("Please enter the name of the token you want to buy:");
 });
 
-bot.action("sell_inscriptions", (ctx) => {
+bot.action("sell_inscriptions", async (ctx) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  if (!isPremium) {
+    return accessBot(ctx);
+  }
   // ctx.reply("Oops! This feature is coming soon...");
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackSellInscriptionWallet";
@@ -309,6 +325,10 @@ bot.action("sell_inscriptions", (ctx) => {
 });
 
 bot.action("track_token", async (ctx) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  if (!isPremium) {
+    return accessBot(ctx);
+  }
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackToken";
   ctx.reply(
