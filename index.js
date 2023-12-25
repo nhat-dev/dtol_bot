@@ -224,16 +224,31 @@ const isUserTelegramPremium = async (ctx) => {
   return isPremium;
 };
 
+const accessBot = (ctx) => {
+  const keyboard1 = Markup.inlineKeyboard(
+    [
+      Markup.button.url(
+        `Buy 1,000 $DXDB to access the bot.`,
+        `https://doggy.market/dxdb`
+      ),
+    ],
+    {
+      columns: 2,
+    }
+  );
+  return ctx.reply(INVALID_USER_WHITE_LIST, keyboard1);
+};
+
 bot.command("menu", async (ctx) => {
   const isGroup = isMessageFromGroup(ctx);
   if (isGroup) {
     return ctx.reply(INVALID_GROUP_CHAT);
   }
 
-  const isPremium = await isUserTelegramPremium(ctx);
-  if (!isPremium) {
-    return ctx.reply(INVALID_USER_WHITE_LIST);
-  }
+  // const isPremium = await isUserTelegramPremium(ctx);
+  // if (!isPremium) {
+  //   return accessBot(ctx);
+  // }
 
   console.log("ctx", ctx.message);
   const wallet = await getCurrentWallet(ctx);
@@ -276,7 +291,7 @@ bot.action("inscriptions", (ctx) => {
   // ctx.reply("Oops! This feature is coming soon...");
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackInscriptionWallet";
-  ctx.reply("Please enter the name of the token you want to transfer:");
+  ctx.reply("Please enter the name of the token you want to inscribe:");
 });
 
 bot.action("buy_inscriptions", (ctx) => {
@@ -391,7 +406,7 @@ bot.on("text", async (ctx) => {
       }
       ctx.session ??= { state: "" };
       ctx.session.state = "waitingForTrackInscriptionAmountWallet";
-      ctx.reply(`Please enter the amount of ${token} you want to transfer:`);
+      ctx.reply(`Please enter the amount of ${token} you want to inscribe:`);
     } catch (error) {
       return errorSession(ctx, "Invalid token, please give it another try.");
     }
@@ -477,7 +492,7 @@ const getPorfolio = async (wallet) => {
 bot.action("porfolio_tracked", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply(INVALID_USER_WHITE_LIST);
+    return accessBot(ctx);
   }
   const wallet = await getCurrentCommandWallet(ctx);
   if (!wallet) return ctx.reply(SET_WALLET_CMD);
@@ -489,7 +504,7 @@ bot.action("porfolio_tracked", async (ctx) => {
 bot.action("your_balance", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply(INVALID_USER_WHITE_LIST);
+    return accessBot(ctx);
   }
   const wallet = await getCurrentCommandWallet(ctx);
 
@@ -518,7 +533,7 @@ const replyNFT = async (wallet, ctx) => {
 bot.action(/.+/, async (ctx, next) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply(INVALID_USER_WHITE_LIST);
+    return accessBot(ctx);
   }
   const cm = ctx.match[0];
   if (cm.startsWith("your_nft")) {
@@ -562,7 +577,7 @@ bot.action(/.+/, async (ctx, next) => {
 bot.action("your_nft", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply(INVALID_USER_WHITE_LIST);
+    return accessBot(ctx);
   }
   console.log("aaaa", ctx);
   const paramValue = ctx.match[1];
@@ -576,7 +591,7 @@ bot.action("your_nft", async (ctx) => {
 bot.action("top_listed_dogemap", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply(INVALID_USER_WHITE_LIST);
+    return accessBot(ctx);
   }
   const wallet = getCurrentCommandWallet(ctx);
 
@@ -604,7 +619,7 @@ bot.action("top_listed_dogemap", async (ctx) => {
 bot.action("top_trending", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
-    return ctx.reply(INVALID_USER_WHITE_LIST);
+    return accessBot(ctx);
   }
   const wallet = getCurrentCommandWallet(ctx);
 
