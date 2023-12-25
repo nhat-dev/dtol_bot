@@ -3,7 +3,8 @@ const { callAPI } = require("./pupupter");
 
 const makeCallAPI = async (url) => {
   try {
-    const daya = await request(url);
+    const data = await request(url);
+    return data;
   } catch (error) {
     return null;
   }
