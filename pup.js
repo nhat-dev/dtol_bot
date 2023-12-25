@@ -1,8 +1,8 @@
-const fetch = require("node-fetch");
+const { request } = require("./request");
 const { callAPI } = require("./pupupter");
 
 const makeCallAPI = async (url) => {
-  return callAPI("https://doggy.market/", url);
+  return request(url);
 };
 
 module.exports = { makeCallAPI };

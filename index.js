@@ -77,7 +77,8 @@ bot.start(async (ctx) => {
   const user = _.get(ctx.message, "chat.username", "");
   await insertStartUser({ name: user });
   return ctx.replyWithHTML(
-    `<b>${APP_TITLE}</b>\n\nWelcome! ${APP_TITLE} is a revolutionary telegram bot on the DRC20 ecosystem. \n${APP_TITLE} makes trading inscriptions more seamless and convenient. `
+    `<b>${APP_TITLE}</b>\n\nWelcome! DXDB is a revolutionary Telegram bot for the DRC-20 ecosystem, simplifying user experiences and making it easier to find information and trade.
+    DXDB was created to make the DRC-20 protocol more user-friendly and accessible. It aims to build a stronger and more vibrant Inscription ecosystem in the future.`
   );
 });
 // bot.help((ctx) => ctx.reply("Send me a sticker"));
@@ -87,7 +88,7 @@ const INVALID_USER_WHITE_LIST =
   "The user is not whitelisted, please contact the administrator.";
 const INVALID_GROUP_CHAT = "This command is invalid in a group chat!";
 const SET_WALLET_CMD =
-  "Please set your wallet using the command /setwallet <<mywallet>>.";
+  "Please set your wallet using the command /setwallet <<address wallet>>.";
 const wallets = {};
 
 bot.use(session());
@@ -187,6 +188,18 @@ const getCurrentTokenInCtx = (ctx) => {
   return wallet;
 };
 
+function isNumeric(str) {
+  // Use parseFloat to convert the string to a number
+  // and then use isNaN to check if it's NaN
+  return !isNaN(parseFloat(str)) && isFinite(str);
+}
+
+const getCurrentAmountCtx = (ctx) => {
+  const amount = `${ctx.message.text}`;
+  if (isNumeric(amount)) return amount;
+  return null;
+};
+
 const getCurrentCommandWallet = async (ctx) => {
   console.log("aaa", ctx.update);
   const user = _.get(ctx.update, "callback_query.from.username", "");
@@ -241,8 +254,8 @@ Main: ${wallet}
       Markup.button.callback("✅ Check wallet", "track_wallet"),
       Markup.button.callback("🔑 Check token", "track_token"),
       Markup.button.callback("📝 Inscribe Transfer", "inscriptions"),
-      Markup.button.callback("🐳 Buy Inscriptions", "inscriptions"),
-      Markup.button.callback("🐻 Sell Inscriptions", "inscriptions"),
+      Markup.button.callback("🐳 Buy Inscriptions", "buy_inscriptions"),
+      Markup.button.callback("🐻 Sell Inscriptions", "sell_inscriptions"),
     ],
     {
       columns: 2,
@@ -260,7 +273,24 @@ bot.action("track_wallet", async (ctx) => {
 });
 
 bot.action("inscriptions", (ctx) => {
-  ctx.reply("Oops! This feature is coming soon...");
+  // ctx.reply("Oops! This feature is coming soon...");
+  ctx.session ??= { state: "" };
+  ctx.session.state = "waitingForTrackInscriptionWallet";
+  ctx.reply("Please enter the name of the token you want to transfer:");
+});
+
+bot.action("buy_inscriptions", (ctx) => {
+  // ctx.reply("Oops! This feature is coming soon...");
+  ctx.session ??= { state: "" };
+  ctx.session.state = "waitingForTrackBuyInscriptionWallet";
+  ctx.reply("Please enter the name of the token you want to buy:");
+});
+
+bot.action("sell_inscriptions", (ctx) => {
+  // ctx.reply("Oops! This feature is coming soon...");
+  ctx.session ??= { state: "" };
+  ctx.session.state = "waitingForTrackSellInscriptionWallet";
+  ctx.reply("Please enter the name of the token you want to sell:");
 });
 
 bot.action("track_token", async (ctx) => {
@@ -310,7 +340,7 @@ bot.on("text", async (ctx) => {
     try {
       const item = await getInfoCoin(_.toLower(token));
       if (!item.tick) {
-        throw Error("Token not found.");
+        return errorSession(ctx, "Invalid token, please give it another try.");
       }
       const keyboard = Markup.inlineKeyboard(
         [
@@ -349,6 +379,78 @@ bot.on("text", async (ctx) => {
     } catch (error) {
       return errorSession(ctx, "Invalid token, please give it another try.");
     }
+  } else if (state === "waitingForTrackInscriptionWallet") {
+    try {
+      const token = getCurrentTokenInCtx(ctx);
+      if (!token) {
+        return errorSession(ctx, "Invalid token, please give it another try.");
+      }
+      const item = await getInfoCoin(_.toLower(token));
+      if (!item.tick) {
+        return errorSession(ctx, "Invalid token, please give it another try.");
+      }
+      ctx.session ??= { state: "" };
+      ctx.session.state = "waitingForTrackInscriptionAmountWallet";
+      ctx.reply(`Please enter the amount of ${token} you want to transfer:`);
+    } catch (error) {
+      return errorSession(ctx, "Invalid token, please give it another try.");
+    }
+  } else if (state === "waitingForTrackInscriptionAmountWallet") {
+    const amount = getCurrentAmountCtx(ctx);
+    if (!amount) {
+      return errorSession(ctx, "Invalid amount, please give it another try.");
+    }
+
+    ctx.reply("Oops! This feature is coming soon...");
+    delete ctx.session.state;
+  } else if (state === "waitingForTrackBuyInscriptionWallet") {
+    try {
+      const token = getCurrentTokenInCtx(ctx);
+      if (!token) {
+        return errorSession(ctx, "Invalid token, please give it another try.");
+      }
+      const item = await getInfoCoin(_.toLower(token));
+      if (!item.tick) {
+        return errorSession(ctx, "Invalid token, please give it another try.");
+      }
+      ctx.session ??= { state: "" };
+      ctx.session.state = "waitingForTrackBuyInscriptionAmountWallet";
+      ctx.reply(`Please enter the amount of ${token} you want to buy:`);
+    } catch (error) {
+      return errorSession(ctx, "Invalid token, please give it another try.");
+    }
+  } else if (state === "waitingForTrackBuyInscriptionAmountWallet") {
+    const amount = getCurrentAmountCtx(ctx);
+    if (!amount) {
+      return errorSession(ctx, "Invalid amount, please give it another try.");
+    }
+
+    ctx.reply("Oops! This feature is coming soon...");
+    delete ctx.session.state;
+  } else if (state === "waitingForTrackSellInscriptionWallet") {
+    try {
+      const token = getCurrentTokenInCtx(ctx);
+      if (!token) {
+        return errorSession(ctx, "Invalid token, please give it another try.");
+      }
+      const item = await getInfoCoin(_.toLower(token));
+      if (!item.tick) {
+        return errorSession(ctx, "Invalid token, please give it another try.");
+      }
+      ctx.session ??= { state: "" };
+      ctx.session.state = "waitingForTrackSellInscriptionAmountWallet";
+      ctx.reply(`Please enter the amount of ${token} you want to sell:`);
+    } catch (error) {
+      return errorSession(ctx, "Invalid token, please give it another try.");
+    }
+  } else if (state === "waitingForTrackSellInscriptionAmountWallet") {
+    const amount = getCurrentAmountCtx(ctx);
+    if (!amount) {
+      return errorSession(ctx, "Invalid amount, please give it another try.");
+    }
+
+    ctx.reply("Oops! This feature is coming soon...");
+    delete ctx.session.state;
   }
 });
 
