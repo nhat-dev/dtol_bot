@@ -86,7 +86,7 @@ const INVALID_USER_WHITE_LIST =
 const INVALID_GROUP_CHAT = "This command is invalid in a group chat!";
 const SET_WALLET_CMD =
   "Please set your wallet using the command /setwallet <<mywallet>>.";
-const APP_TITLE = "Fbod DRC-20 coin tracking";
+const APP_TITLE = "DRC-20 x Digital Bot";
 const wallets = {};
 
 bot.use(session());
