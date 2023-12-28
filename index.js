@@ -98,12 +98,12 @@ bot.command("price", async (ctx) => {
   if (!token) {
     return ctx.reply("Invalid token! Please type the example: /price dugi.");
   }
-  const isPremium = await isUserTelegramPremium(ctx);
-  if (!isPremium) {
-    return ctx.reply(
-      "The user is not whitelisted; please contact the administrator."
-    );
-  }
+  // const isPremium = await isUserTelegramPremium(ctx);
+  // if (!isPremium) {
+  //   return ctx.reply(
+  //     "The user is not whitelisted; please contact the administrator."
+  //   );
+  // }
 
   try {
     const item = await getInfoCoin(_.toLower(token));
@@ -116,9 +116,10 @@ bot.command("price", async (ctx) => {
           `Buy/Sell ${item.tick}`,
           `https://doggy.market/${item.tick}`
         ),
+        Markup.button.url(`Lanch Bot $DXDB`, `https://t.me/drc20digital_bot`),
       ],
       {
-        columns: 2,
+        columns: 1,
       }
     );
     const html = `<b>${APP_TITLE}</b>\n🐶 <b>${
