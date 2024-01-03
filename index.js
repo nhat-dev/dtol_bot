@@ -334,6 +334,8 @@ bot.action("sell_inscriptions", async (ctx) => {
   ctx.reply("Please enter the name of the token you want to sell:");
 });
 
+const Referral_Amount = 50;
+
 bot.action("referral", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   const user = getUserTelegram(ctx);
@@ -343,7 +345,7 @@ bot.action("referral", async (ctx) => {
     return accessBot(ctx);
   }
   ctx.replyWithHTML(`<b>👥 Referral Info</b>\n\nReferrals: ${userReferrals}\nReferrals 🐶: ${markets.formatVND(
-    userReferrals * 1000
+    userReferrals * Referral_Amount
   )} $DXDB\n\n📈 Get Referral link 📉<pre>https://t.me/${botName}?start=${user}</pre>
   `);
 });
