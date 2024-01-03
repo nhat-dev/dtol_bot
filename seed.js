@@ -5,7 +5,7 @@ const Mongoose = require("mongoose");
 const seedUser = async () => {
   const { PremiumModel } = require("./scheme");
   try {
-    const user = new PremiumModel({ name: "H4mze24", status: true });
+    const user = new PremiumModel({ name: "KezDXDB", status: true });
     await user.save();
     console.log("seed ok");
   } catch (error) {

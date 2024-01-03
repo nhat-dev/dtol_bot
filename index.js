@@ -348,10 +348,10 @@ bot.action("referral", async (ctx) => {
 });
 
 bot.action("track_token", async (ctx) => {
-  const isPremium = await isUserTelegramPremiumCtx(ctx);
-  if (!isPremium) {
-    return accessBot(ctx);
-  }
+  // const isPremium = await isUserTelegramPremiumCtx(ctx);
+  // if (!isPremium) {
+  //   return accessBot(ctx);
+  // }
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackToken";
   ctx.reply(
@@ -644,10 +644,10 @@ bot.action("your_nft", async (ctx) => {
 });
 
 bot.action("top_listed_dogemap", async (ctx) => {
-  const isPremium = await isUserTelegramPremiumCtx(ctx);
-  if (!isPremium) {
-    return accessBot(ctx);
-  }
+  // const isPremium = await isUserTelegramPremiumCtx(ctx);
+  // if (!isPremium) {
+  //   return accessBot(ctx);
+  // }
   const wallet = getCurrentCommandWallet(ctx);
 
   if (!wallet) return ctx.reply(SET_WALLET_CMD);
@@ -672,10 +672,10 @@ bot.action("top_listed_dogemap", async (ctx) => {
 });
 
 bot.action("top_trending", async (ctx) => {
-  const isPremium = await isUserTelegramPremiumCtx(ctx);
-  if (!isPremium) {
-    return accessBot(ctx);
-  }
+  // const isPremium = await isUserTelegramPremiumCtx(ctx);
+  // if (!isPremium) {
+  //   return accessBot(ctx);
+  // }
   const wallet = getCurrentCommandWallet(ctx);
 
   if (!wallet) return ctx.reply(SET_WALLET_CMD);
