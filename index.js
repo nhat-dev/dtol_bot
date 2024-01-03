@@ -341,9 +341,6 @@ bot.action("referral", async (ctx) => {
   const user = getUserTelegram(ctx);
   const botName = _.get(ctx, "botInfo.username", "");
   const userReferrals = await getReferrals({ name: user });
-  if (!isPremium) {
-    return accessBot(ctx);
-  }
   ctx.replyWithHTML(`<b>👥 Referral Info</b>\n\nReferrals: ${userReferrals}\nReferrals 🐶: ${markets.formatVND(
     userReferrals * Referral_Amount
   )} $DXDB\n\n📈 Get Referral link 📉<pre>https://t.me/${botName}?start=${user}</pre>
