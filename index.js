@@ -116,7 +116,7 @@ bot.command("price", async (ctx) => {
           `Buy/Sell ${item.tick}`,
           `https://doggy.market/${item.tick}`
         ),
-        Markup.button.url(`Lanch Bot $DXDB`, `https://t.me/drc20digital_bot`),
+        Markup.button.url(`Launch Bot $DXDB`, `https://t.me/drc20digital_bot`),
       ],
       {
         columns: 1,
