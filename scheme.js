@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const userSchemes = new mongoose.Schema({
   name: String,
   wallet: String,
+  referralCode: String,
 });
 
 const UserModel = mongoose.model("User", userSchemes);

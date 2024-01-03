@@ -14,16 +14,27 @@ const insertUser = async ({ name, wallet }) => {
   }
 };
 
-const insertStartUser = async ({ name }) => {
+const insertStartUser = async ({ name, referralCode = "" }) => {
   try {
     const isExists = await UserModel.findOne({ name }).lean();
     if (!isExists) {
-      const user = new UserModel({ name, wallet: "" });
+      const user = new UserModel({ name, wallet: "", referralCode });
       await user.save();
     }
   } catch (error) {
     console.log("error", error);
   }
+};
+
+const getReferrals = async ({ name }) => {
+  try {
+    const users = await UserModel.find({ referralCode: name }).lean();
+    return users.length;
+  } catch (error) {
+    console.log("error", error);
+  }
+
+  return 0;
 };
 
 const findCurrentUser = async (name) => {
@@ -41,4 +52,5 @@ module.exports = {
   findCurrentUser,
   isUserPremium,
   insertStartUser,
+  getReferrals,
 };

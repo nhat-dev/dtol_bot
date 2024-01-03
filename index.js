@@ -44,6 +44,7 @@ const {
   findCurrentUser,
   isUserPremium,
   insertStartUser,
+  getReferrals,
 } = require("./model");
 
 function formatWalletAddress(
@@ -74,8 +75,10 @@ const APP_TITLE = "DRC-20 x Digital Bot";
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.start(async (ctx) => {
+  const referralCode = ctx.payload;
+  console.log("referralCode", referralCode);
   const user = _.get(ctx.message, "chat.username", "");
-  await insertStartUser({ name: user });
+  await insertStartUser({ name: user, referralCode });
   return ctx.replyWithHTML(
     `<b>${APP_TITLE}</b>\n\nWelcome! DXDB is a revolutionary Telegram bot for the DRC-20 ecosystem, simplifying user experiences and making it easier to find information and trade.
     DXDB was created to make the DRC-20 protocol more user-friendly and accessible. It aims to build a stronger and more vibrant Inscription ecosystem in the future.`
@@ -219,6 +222,11 @@ const isUserTelegramPremiumCtx = async (ctx) => {
   return isPremium;
 };
 
+const getUserTelegram = (ctx) => {
+  const user = _.get(ctx.update, "callback_query.from.username", "");
+  return user;
+};
+
 const isUserTelegramPremium = async (ctx) => {
   const user = _.get(ctx.message, "chat.username", "");
   const isPremium = await isUserPremium(user);
@@ -272,6 +280,7 @@ Main: ${wallet}
       Markup.button.callback("📝 Inscribe Transfer", "inscriptions"),
       Markup.button.callback("🐳 Buy Inscriptions", "buy_inscriptions"),
       Markup.button.callback("🐻 Sell Inscriptions", "sell_inscriptions"),
+      Markup.button.callback("👥 Referral", "referral"),
     ],
     {
       columns: 2,
@@ -323,6 +332,20 @@ bot.action("sell_inscriptions", async (ctx) => {
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackSellInscriptionWallet";
   ctx.reply("Please enter the name of the token you want to sell:");
+});
+
+bot.action("referral", async (ctx) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  const user = getUserTelegram(ctx);
+  const botName = _.get(ctx, "botInfo.username", "");
+  const userReferrals = await getReferrals({ name: user });
+  if (!isPremium) {
+    return accessBot(ctx);
+  }
+  ctx.replyWithHTML(`<b>👥 Referral Info</b>\n\nReferrals: ${userReferrals}\nReferrals 🐶: ${markets.formatVND(
+    userReferrals * 1000
+  )} $DXDB\n\n📈 Get Referral link 📉<pre>https://t.me/${botName}?start=${user}</pre>
+  `);
 });
 
 bot.action("track_token", async (ctx) => {
