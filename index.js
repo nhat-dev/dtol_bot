@@ -26,7 +26,6 @@ const { message } = require("telegraf/filters");
 const utils = require("./utils");
 const markets = require("./market");
 const mongoose = require("mongoose");
-
 const { Telegraf, Markup, session } = require("telegraf");
 const {
   getListCoin,
@@ -37,6 +36,7 @@ const {
   getTrending,
   getMyDogmap,
   getActivity,
+  getActivityBuySellToken,
 } = require("./drc20");
 const { formatBalance } = require("./formatter");
 const {
@@ -47,6 +47,7 @@ const {
   getReferrals,
   listRanking,
 } = require("./model");
+const moment = require("moment");
 
 function formatWalletAddress(
   walletAddress,
@@ -60,6 +61,7 @@ function formatWalletAddress(
 
   return formattedAddress;
 }
+const sysTime = moment();
 
 mongoose
   .connect(process.env.DATABASE_URL)
@@ -97,7 +99,16 @@ const wallets = {};
 
 bot.use(session());
 
+console.log("sysTime:", sysTime.format());
+
 bot.command("price", async (ctx) => {
+  const timestamp = moment.unix(ctx.message.date);
+  console.log("moment(ctx.message.date)", timestamp.format());
+  if (!timestamp.isSameOrAfter(sysTime)) {
+    console.log("Error time");
+    return;
+  }
+  console.log("ctx", ctx.message.date);
   let token = _.trim(_.get(_.split(ctx.message.text, " "), "1"));
   if (!token) {
     return ctx.reply("Invalid token! Please type the example: /price dugi.");
@@ -119,6 +130,10 @@ bot.command("price", async (ctx) => {
         Markup.button.url(
           `Buy/Sell ${item.tick}`,
           `https://doggy.market/${item.tick}`
+        ),
+        Markup.button.callback(
+          "📈 Recent activities",
+          `activity_token:${item.tick}`
         ),
         Markup.button.url(`Launch Bot $DXDB`, `https://t.me/drc20digital_bot`),
       ],
@@ -154,6 +169,11 @@ bot.command("price", async (ctx) => {
 });
 
 bot.command("setwallet", async (ctx) => {
+  const timestamp = moment.unix(ctx.message.date);
+  if (!timestamp.isSameOrAfter(sysTime)) {
+    console.log("Error time");
+    return;
+  }
   const isGroup = isMessageFromGroup(ctx);
   if (isGroup) {
     return ctx.reply(INVALID_GROUP_CHAT);
@@ -250,6 +270,11 @@ const accessBot = (ctx) => {
 };
 
 bot.command("menu", async (ctx) => {
+  const timestamp = moment.unix(ctx.message.date);
+  if (!timestamp.isSameOrAfter(sysTime)) {
+    console.log("Error time");
+    return;
+  }
   const isGroup = isMessageFromGroup(ctx);
   if (isGroup) {
     return ctx.reply(INVALID_GROUP_CHAT);
@@ -430,9 +455,13 @@ bot.on("text", async (ctx) => {
             `Buy/Sell ${item.tick}`,
             `https://doggy.market/${item.tick}`
           ),
+          Markup.button.callback(
+            "📈 Recent activities",
+            `activity_token:${item.tick}`
+          ),
         ],
         {
-          columns: 2,
+          columns: 1,
         }
       );
       const html = `<b>${APP_TITLE}</b>\n🐶 <b>${
@@ -646,6 +675,20 @@ bot.action(/.+/, async (ctx, next) => {
                 "tick",
                 ""
               )}</b> - Amount: ${_.get(e, "amount", "")}`;
+            }).join("\n")
+      }`
+    );
+  } else if (cm.startsWith("activity_token")) {
+    const token = _.last(cm.split(":"));
+    const data = await getActivityBuySellToken(token);
+    return ctx.replyWithHTML(
+      `<b>🕐 Activity: ${token}</b>\n\n${
+        data.length === 0
+          ? "Not found"
+          : _.map(data, (e) => {
+              return `💵 ${formatWalletAddress(e.sellerAddress)} <b>sell</b> ${
+                e.amount
+              } $${token} - ${e.profit} DOGE`;
             }).join("\n")
       }`
     );

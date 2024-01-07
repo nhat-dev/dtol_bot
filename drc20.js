@@ -180,6 +180,22 @@ const getActivity = async (wallet) => {
   });
 };
 
+const getActivityBuySellToken = async (token) => {
+  const data = await makeCallAPI(
+    `https://api.doggy.market/listings/tick/${token}/orders?offset=0&limit=10&type=sell`
+  );
+
+  return map(get(data, "data", []), (item) => {
+    return {
+      tick: get(item, "tick"),
+      price: formatBalance(get(item, "pricePerToken")),
+      profit: formatBalance(get(item, "price")),
+      sellerAddress: get(item, "sellerAddress"),
+      amount: formatVND(get(item, "amount")),
+    };
+  });
+};
+
 // fetch("https://api.doggy.market/buyer/createBuyingPSBT", {
 //   "headers": {
 //     "content-type": "application/json",
@@ -215,5 +231,6 @@ module.exports = {
   getTrending,
   getMyDogmap,
   getActivity,
+  getActivityBuySellToken,
   getDogmapListing,
 };

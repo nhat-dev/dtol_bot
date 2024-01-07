@@ -89,8 +89,8 @@ const listRanking = async () => {
       console.log("Connected");
       require("./scheme");
       // seedUser();
-      // seedListUser();
-      await listRanking();
+      seedListUser();
+      // await listRanking();
     })
     .catch((error) => {
       console.log("Connected error", error);
