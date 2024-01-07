@@ -11,7 +11,7 @@ const {
 } = require("lodash");
 const fetch = require("node-fetch");
 const { makeCallAPI } = require("./pup");
-const { formatBalance } = require("./formatter");
+const { formatBalance, formatBalance1 } = require("./formatter");
 const { formatVND } = require("./market");
 
 const getListCoin = async (wallet) => {
@@ -189,9 +189,10 @@ const getActivityBuySellToken = async (token) => {
     return {
       tick: get(item, "tick"),
       price: formatBalance(get(item, "pricePerToken")),
-      profit: formatBalance(get(item, "price")),
+      profit: formatBalance1(get(item, "price")),
       sellerAddress: get(item, "sellerAddress"),
       amount: formatVND(get(item, "amount")),
+      buyerAddress: get(item, "buyerAddress"),
     };
   });
 };

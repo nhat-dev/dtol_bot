@@ -639,17 +639,21 @@ const replyNFT = async (wallet, ctx) => {
 };
 
 bot.action(/.+/, async (ctx, next) => {
-  const isPremium = await isUserTelegramPremiumCtx(ctx);
-  if (!isPremium) {
-    return accessBot(ctx);
-  }
   const cm = ctx.match[0];
   if (cm.startsWith("your_nft")) {
+    const isPremium = await isUserTelegramPremiumCtx(ctx);
+    if (!isPremium) {
+      return accessBot(ctx);
+    }
     const wallet = _.last(cm.split(":"));
     if (!wallet) return ctx.reply(SET_WALLET_CMD);
 
     await replyNFT(wallet, ctx);
   } else if (cm.startsWith("dogemap")) {
+    const isPremium = await isUserTelegramPremiumCtx(ctx);
+    if (!isPremium) {
+      return accessBot(ctx);
+    }
     const wallet = _.last(cm.split(":"));
     const data = await getMyDogmap(wallet);
 
@@ -663,6 +667,10 @@ bot.action(/.+/, async (ctx, next) => {
       }`
     );
   } else if (cm.startsWith("history_mint")) {
+    const isPremium = await isUserTelegramPremiumCtx(ctx);
+    if (!isPremium) {
+      return accessBot(ctx);
+    }
     const wallet = _.last(cm.split(":"));
     const data = await getActivity(wallet);
     return ctx.replyWithHTML(
@@ -686,9 +694,13 @@ bot.action(/.+/, async (ctx, next) => {
         data.length === 0
           ? "Not found"
           : _.map(data, (e) => {
-              return `💵 ${formatWalletAddress(e.sellerAddress)} <b>sell</b> ${
-                e.amount
-              } $${token} - ${e.profit} DOGE`;
+              return `💵 ${formatWalletAddress(
+                e.sellerAddress,
+                3,
+                4
+              )} <b>sell</b> ${e.amount} $${token} - ${
+                e.profit
+              } DOGE for ${formatWalletAddress(e.buyerAddress, 3, 4)}`;
             }).join("\n")
       }`
     );
