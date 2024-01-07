@@ -1,3 +1,4 @@
+const { groupBy, mapValues, map, orderBy, slice } = require("lodash");
 const { UserModel, PremiumModel } = require("./scheme");
 
 const insertUser = async ({ name, wallet }) => {
@@ -47,10 +48,28 @@ const isUserPremium = async (name) => {
   return !!data;
 };
 
+const listRanking = async () => {
+  const users = await UserModel.find({ referralCode: { $ne: "" } }).lean();
+  const groupedData = groupBy(users, "referralCode");
+
+  const countedData = mapValues(groupedData, (group) => group.length);
+  const countedArray = map(countedData, (count, userName) => ({
+    userName,
+    count,
+  }));
+  const orderedData = orderBy(countedArray, "count", "desc");
+  return slice(
+    orderedData.filter((x) => !["AkaiTrading"].includes(x.userName)),
+    0,
+    10
+  );
+};
+
 module.exports = {
   insertUser,
   findCurrentUser,
   isUserPremium,
   insertStartUser,
   getReferrals,
+  listRanking,
 };

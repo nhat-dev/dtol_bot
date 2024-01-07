@@ -45,6 +45,7 @@ const {
   isUserPremium,
   insertStartUser,
   getReferrals,
+  listRanking,
 } = require("./model");
 
 function formatWalletAddress(
@@ -281,6 +282,7 @@ Main: ${wallet}
       Markup.button.callback("🐳 Buy Inscriptions", "buy_inscriptions"),
       Markup.button.callback("🐻 Sell Inscriptions", "sell_inscriptions"),
       Markup.button.callback("👥 Referral", "referral"),
+      Markup.button.callback("🌟 Top Referral", "top_referral"),
     ],
     {
       columns: 2,
@@ -344,6 +346,28 @@ bot.action("referral", async (ctx) => {
   ctx.replyWithHTML(`<b>👥 Referral Info</b>\n\nReferrals: ${userReferrals}\nReferrals 🐶: ${markets.formatVND(
     userReferrals * Referral_Amount
   )} $DXDB\n\n📈 Get Referral link 📉<pre>https://t.me/${botName}?start=${user}</pre>
+  `);
+});
+
+bot.action("top_referral", async (ctx) => {
+  const isPremium = await isUserTelegramPremiumCtx(ctx);
+  const user = getUserTelegram(ctx);
+  const botName = _.get(ctx, "botInfo.username", "");
+  const userReferrals = await listRanking();
+  const topIndex = {
+    1: "🌟",
+    2: "⭐",
+    3: "✨",
+  };
+  const top = `${_.map(userReferrals, (u, index) => {
+    const top = index + 1;
+
+    return `${_.get(topIndex, top, `#${index}`)} - @${u.userName} - ${
+      u.count
+    } referral`;
+  }).join("\n")}`;
+
+  ctx.replyWithHTML(`<b>🌟🌟🌟 Top Referral 🌟🌟🌟</b>\n\n${top}\n\n📈 Get Referral link 📉<pre>https://t.me/${botName}?start=${user}</pre>
   `);
 });
 
