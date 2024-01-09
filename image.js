@@ -1,6 +1,7 @@
 const nodeHtmlToImage = require("node-html-to-image");
 const fs = require("fs");
 const handlebars = require("handlebars");
+const puppeteer = require("puppeteer");
 
 const imageURL =
   "https://api.doggy.market/inscriptions/23bc218908381792631af76aa8dc071f11463b14161a8abfe01ca1c27dc90721i0/content";
@@ -30,6 +31,11 @@ const createImage = ({
       const template = handlebars.compile(data);
       nodeHtmlToImage({
         output,
+        puppeteer,
+        puppeteerArgs: {
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+          headless: "new",
+        },
         html: template({
           imageURL,
           collectionName,
