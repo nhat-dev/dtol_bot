@@ -335,6 +335,32 @@ Main: ${wallet}
   ctx.replyWithHTML(messageText, keyboard);
 });
 
+bot.command("collections", async (ctx) => {
+  const collections = await getCollections();
+  // Creating a button
+  const keyboard = Markup.inlineKeyboard(
+    [
+      ..._.map(collections, (item) => {
+        return Markup.button.callback(
+          item.name,
+          `collections_detail:${item.collectionId}`
+        );
+      }),
+    ],
+    {
+      columns: 2,
+    }
+  );
+
+  ctx.replyWithHTML(
+    `<b>🏞 Collections</b>\n\n${_.map(collections, (item, index) => {
+      const rank = index + 1;
+      return `#${rank} - <b><a href="tg://user?id=123456789">${item.name}</a></b> - <i>Floor: ${item.floorPrice} DOGE</i> - Volumn: ${item.volume} DOGE`;
+    }).join("\n")}`,
+    keyboard
+  );
+});
+
 bot.action("track_wallet", async (ctx) => {
   const isPremium = await isUserTelegramPremiumCtx(ctx);
   if (!isPremium) {
@@ -860,4 +886,10 @@ bot.action("top_trending", async (ctx) => {
 
 try {
   bot.launch();
+  if (bot)
+    bot.telegram
+      .getMe()
+      .then((res) =>
+        console.log(`Bot started on https://t.me/${res.username}`)
+      );
 } catch (error) {}

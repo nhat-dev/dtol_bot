@@ -75,13 +75,6 @@ const deleteImage = ({ id }) => {
   }
 };
 
-createImage({
-  collectionName: "Testaaa",
-  id: 123,
-  imageURL:
-    "https://api.doggy.market/inscriptions/ed28ccb178623c571c4c367eb0557fed09a6da0a0e522c6e7c43355506b615bfi0/content",
-});
-
 module.exports = {
   createImage,
   deleteImage,
