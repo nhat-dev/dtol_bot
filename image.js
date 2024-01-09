@@ -1,7 +1,7 @@
-const nodeHtmlToImage = require("node-html-to-image");
 const fs = require("fs");
 const handlebars = require("handlebars");
 const puppeteer = require("puppeteer");
+const { nodeHtmlToImage } = require("./htmlToImage");
 
 const imageURL =
   "https://api.doggy.market/inscriptions/23bc218908381792631af76aa8dc071f11463b14161a8abfe01ca1c27dc90721i0/content";
@@ -33,7 +33,16 @@ const createImage = ({
         output,
         puppeteer,
         puppeteerArgs: {
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-web-security",
+            "--disable-features=IsolateOrigins,site-per-process",
+            "--disable-site-isolation-trials",
+            "--disable-features=BlockInsecurePrivateNetworkRequests",
+            "--disable-features=SameSiteByDefaultCookies",
+            "--disable-features=CookiesWithoutSameSiteMustBeSecure",
+          ],
           headless: "new",
         },
         html: template({
@@ -65,6 +74,13 @@ const deleteImage = ({ id }) => {
     console.log(`Image '${imagePath}' not found in the specified directory.`);
   }
 };
+
+createImage({
+  collectionName: "Testaaa",
+  id: 123,
+  imageURL:
+    "https://api.doggy.market/inscriptions/ed28ccb178623c571c4c367eb0557fed09a6da0a0e522c6e7c43355506b615bfi0/content",
+});
 
 module.exports = {
   createImage,
