@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:400,700,900" rel="stylesheet" />
+    <style>
+        * {
+            font-family: "Poppins" !important;
+        }
+
+        .row {
+            background-color: #1a2833;
+            flex-direction: row;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 4px;
+            align-items: center;
+
+        }
+
+        .space {
+            flex-direction: row;
+            display: flex;
+            background-color: #171d27;
+            padding: 10px;
+            flex: 1;
+            border-radius: 12px 0px 0 12px;
+        }
+
+        .flex-1 {
+            flex: 1;
+        }
+
+        .col {
+            display: flex;
+            flex-direction: column;
+            background-color: #1a2833;
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .text-bold {
+            font-size: 18px;
+        }
+
+        .text-bold {
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            letter-spacing: 2px;
+        }
+
+        .text-value {
+            font-size: 12px;
+            font-weight: 100;
+            color: white;
+            letter-spacing: 1.4px;
+        }
+
+        .row-1 {
+            flex-direction: row;
+            display: flex;
+        }
+
+        .line {
+            width: 5px;
+        }
+
+        .m-4 {
+            margin-top: 5px;
+        }
+
+        .p-v {
+            padding: 20
+        }
+
+        .center {
+            justify-content: center;
+            align-items: center;
+            display: flex;
+            background-color: #ebb305;
+            border-radius: 12px;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: row;
+            background-color: #ebb305;
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .new-sale {
+            font: bold 12px Sans-Serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: #369;
+            color: #fff;
+            padding: 5px;
+            margin: 0 0 10px 0;
+            line-height: 24px;
+            position: absolute;
+            top: 12%;
+            left: 100%;
+            width: 200px;
+            background: none;
+            transform-origin: 0 0;
+            transform: rotate(90deg);
+            text-align: center;
+        }
+
+        .col-1 {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .text-black {
+            color: #171d27;
+            margin-top: 10px;
+        }
+
+        .center-2 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .img {
+            border-radius: 1000px;
+            width: 150px;
+            height: 150px;
+        }
+
+        .underline {
+            text-decoration: underline;
+        }
+
+        .text-bolder {
+            font-size: 20px;
+            font-weight: bolder;
+        }
+
+        .col-2 {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+        }
+
+        .text-usd {
+            color: white;
+            font-weight: 100;
+            font-size: 10px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="space">
+            <div class="flex-1 center col-1">
+                <img src="{{imageURL}}" id="imageBackground" class="img" />
+                <span class="text-bolder text-black">{{collectionName}}</span>
+                <span class="text-black underline">DXDB Bot</span>
+            </div>
+            <span style="width: 10px;"></span>
+            <div class="flex-1">
+                <div class="row">
+                    <span class="text-bold">ITEM ID</span>
+                    <span class="text-value">{{collectionId}}</span>
+                </div>
+                <div class="row">
+                    <span class="text-bold">FLOOR PRICE</span>
+                    <div class="col-2">
+                        <span class="text-value">{{price}} DOGE</span>
+                        <span class="text-usd">$ {{priceUSD}}</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <span class="text-bold">PAID</span>
+                    <div class="col-2">
+                        <span class="text-value">{{pricePerToken}} DOGE</span>
+                        <span class="text-usd">$ {{pricePerTokenUSD}}</span>
+                    </div>
+                </div>
+                <div class="row-1">
+                    <div class="col flex-1 center-2">
+                        <span class="text-bold">BUYER</span>
+                        <span class="text-value">{{buyer}}</span>
+                    </div>
+                    <span class="line"></span>
+                    <div class="col flex-1 center-2">
+                        <span class="text-bold">SUPPLY</span>
+                        <span class="text-value">{{supply}}</span>
+                    </div>
+                </div>
+                <div class="row-1 m-4">
+                    <div class="col flex-1 center-2">
+                        <span class="text-bold">MCAP</span>
+                        <span class="text-value">{{mc}} DOGE</span>
+                    </div>
+                    <span class="line"></span>
+                    <div class="col flex-1 center-2">
+                        <span class="text-bold">HOLDERS</span>
+                        <span class="text-value">{{holder}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div
+            style="position: relative; width: 30px;background-color: #27292e; display: flex;flex-direction: column;justify-content: center;align-items: center;border-radius: 0px 12px 12px 0px;">
+            <span class="new-sale">
+                RECENTLY SOLD
+            </span>
+        </div>
+    </div>
+</body>
+
+</html>

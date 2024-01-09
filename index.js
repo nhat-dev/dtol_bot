@@ -25,6 +25,7 @@ require("dotenv").config();
 const { message } = require("telegraf/filters");
 const utils = require("./utils");
 const markets = require("./market");
+const { Agent } = require("node:https");
 const mongoose = require("mongoose");
 const { Telegraf, Markup, session } = require("telegraf");
 const {
@@ -37,8 +38,14 @@ const {
   getMyDogmap,
   getActivity,
   getActivityBuySellToken,
+  getCollections,
+  getCollectById,
 } = require("./drc20");
-const { formatBalance } = require("./formatter");
+const {
+  formatBalance,
+  convertToAbbreviation,
+  formatBalance1,
+} = require("./formatter");
 const {
   insertUser,
   findCurrentUser,
@@ -48,6 +55,7 @@ const {
   listRanking,
 } = require("./model");
 const moment = require("moment");
+const { createImage, deleteImage } = require("./image");
 
 function formatWalletAddress(
   walletAddress,
@@ -76,7 +84,11 @@ mongoose
 
 const APP_TITLE = "DRC-20 x Digital Bot";
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
+const bot = new Telegraf(process.env.BOT_TOKEN, {
+  telegram: {
+    agent: new Agent({ keepAlive: false }),
+  },
+});
 bot.start(async (ctx) => {
   const referralCode = ctx.payload;
   console.log("referralCode", referralCode);
@@ -100,6 +112,10 @@ const wallets = {};
 bot.use(session());
 
 console.log("sysTime:", sysTime.format());
+
+bot.catch((error) => {
+  console.log("error", error);
+});
 
 bot.command("price", async (ctx) => {
   const timestamp = moment.unix(ctx.message.date);
@@ -308,6 +324,7 @@ Main: ${wallet}
       Markup.button.callback("🐻 Sell Inscriptions", "sell_inscriptions"),
       Markup.button.callback("👥 Referral", "referral"),
       Markup.button.callback("🌟 Top Referral", "top_referral"),
+      Markup.button.callback("🏞 Collections", "collections"),
     ],
     {
       columns: 2,
@@ -326,6 +343,33 @@ bot.action("track_wallet", async (ctx) => {
   ctx.session ??= { state: "" };
   ctx.session.state = "waitingForTrackWallet";
   ctx.reply("Please enter the wallet address you'd like to check.");
+});
+
+bot.action("collections", async (ctx) => {
+  const collections = await getCollections();
+
+  // Creating a button
+  const keyboard = Markup.inlineKeyboard(
+    [
+      ..._.map(collections, (item) => {
+        return Markup.button.callback(
+          item.name,
+          `collections_detail:${item.collectionId}`
+        );
+      }),
+    ],
+    {
+      columns: 2,
+    }
+  );
+
+  ctx.replyWithHTML(
+    `<b>🏞 Collections</b>\n\n${_.map(collections, (item, index) => {
+      const rank = index + 1;
+      return `#${rank} - <b><a href="tg://user?id=123456789">${item.name}</a></b> - <i>Floor: ${item.floorPrice} DOGE</i> - Volumn: ${item.volume} DOGE`;
+    }).join("\n")}`,
+    keyboard
+  );
 });
 
 bot.action("inscriptions", async (ctx) => {
@@ -704,6 +748,51 @@ bot.action(/.+/, async (ctx, next) => {
             }).join("\n")
       }`
     );
+  } else if (cm.startsWith("collections_detail")) {
+    try {
+      const collectionId = _.last(cm.split(":"));
+      const data = await getCollectById(collectionId);
+      const oneActivity = _.get(data, "activity.0");
+      console.log("oneActivity", oneActivity);
+      const proof = await createImage({
+        id: data.id,
+        imageURL: data.image,
+        collectionName: data.name,
+        price: data.floorPrice,
+        priceUSD: formatBalance(_.toNumber(data.floor) * 0.09),
+        pricePerToken: data.floorPrice,
+        pricePerTokenUSD: formatBalance(_.toNumber(data.floor) * 0.09),
+        buyer: formatWalletAddress(oneActivity.buyerAddress),
+        supply: convertToAbbreviation(data.supply),
+        mc: convertToAbbreviation(
+          _.toNumber(data.supply) * _.toNumber(data.floor),
+          true
+        ),
+        holder: convertToAbbreviation(data.holders),
+        collectionId: data.collectionId,
+        itemId: _.get(oneActivity, "name"),
+      });
+
+      ctx.replyWithPhoto(
+        { source: proof },
+        {
+          caption: `<b>Activity: </b>\n${_.map(data.activity, (e) => {
+            return `💵 ${formatWalletAddress(
+              e.sellerAddress,
+              3,
+              4
+            )} <b>sell</b> <code>${data.collectionId}#${
+              e.name
+            }</code> - ${formatBalance1(
+              e.price
+            )} DOGE for ${formatWalletAddress(e.buyerAddress, 3, 4)}`;
+          }).join("\n")}`,
+          parse_mode: "HTML",
+        }
+      );
+    } catch (error) {
+      console.log("error", error);
+    }
   }
   next();
 });

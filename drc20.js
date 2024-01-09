@@ -8,17 +8,18 @@ const {
   filter,
   mapValues,
   sumBy,
+  slice,
 } = require("lodash");
 const fetch = require("node-fetch");
 const { makeCallAPI } = require("./pup");
 const { formatBalance, formatBalance1 } = require("./formatter");
 const { formatVND } = require("./market");
+const { createImage } = require("./image");
 
 const getListCoin = async (wallet) => {
   const data = await makeCallAPI(
     `https://api.doggy.market/wallet/${wallet}/holdings`
   );
-  console.log("aaaa", data, wallet);
   const datas = await Promise.all(
     map(data, async (item) => {
       // const tick = await getPrice(item.tick);
@@ -30,7 +31,6 @@ const getListCoin = async (wallet) => {
       };
     })
   );
-  console.log("datas", datas);
   return datas;
 };
 const getPrice = async (tick) => {
@@ -223,7 +223,54 @@ const getActivityBuySellToken = async (token) => {
 //   "method": "POST"
 // });
 
+const getCollections = async () => {
+  const data = await makeCallAPI(`https://api.doggy.market/nfts/trending`);
+  return map(slice(data, 0, 10), (item) => {
+    return {
+      name: get(item, "collection.name"),
+      collectionId: get(item, "collection.collectionId"),
+      id: get(item, "collection._id"),
+      supply: get(item, "collection.supply"),
+      floorPrice: formatBalance1(get(item, "floorPrice")),
+      trades: get(item, "trades"),
+      holders: get(item, "owners"),
+      volume: formatBalance1(get(item, "volume")),
+      image: get(item, "collection.image"),
+    };
+  });
+};
+
+const getCollectById = async (id) => {
+  const item = await makeCallAPI(`https://api.doggy.market/nfts/${id}`);
+  const activities = await makeCallAPI(
+    `https://api.doggy.market/listings/nfts/${id}/orders?type=sell&offset=0&limit=10`
+  );
+
+  return {
+    name: get(item, "collection.name"),
+    collectionId: get(item, "collection.collectionId"),
+    id: get(item, "collection._id"),
+    supply: get(item, "collection.supply"),
+    floorPrice: formatBalance1(get(item, "floorPrice")),
+    floor: get(item, "floorPrice"),
+    trades: get(item, "trades"),
+    holders: get(item, "owners"),
+    volume: formatBalance1(get(item, "volume")),
+    image: get(item, "collection.image"),
+    activity: map(get(activities, "data", []), (x) => {
+      return {
+        sellerAddress: get(x, "sellerAddress", ""),
+        price: get(x, "price"),
+        buyerAddress: get(x, "buyerAddress", ""),
+        name: get(x, "itemId", ""),
+      };
+    }),
+  };
+};
+
 module.exports = {
+  getCollectById,
+  getCollections,
   getListCoin,
   getInfoCoin,
   getBalance,
